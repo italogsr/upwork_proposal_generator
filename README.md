@@ -21,6 +21,11 @@ A LangGraph-powered tool that automatically generates personalized Upwork propos
   - Copy-to-clipboard functionality
   - User authentication
   - Save and load profiles, job descriptions, and proposals
+- **Flask Frontend**: Alternative web interface with the same functionality
+  - Bootstrap-based responsive design
+  - Modern UI with tabs and cards
+  - Session-based data storage
+  - Authentication integration with the API
 - **Database**: PostgreSQL database for persistent storage
   - Store user profiles and preferences
   - Save job descriptions for future reference
@@ -71,6 +76,7 @@ A LangGraph-powered tool that automatically generates personalized Upwork propos
    API_URL=http://localhost:8000  # URL for the frontend to connect to
    API_PORT=8000                  # Port for the API server
    STREAMLIT_PORT=8501            # Port for the Streamlit frontend
+   FLASK_PORT=8502                # Port for the Flask frontend
    ```
 
 6. Set up the database:
@@ -105,6 +111,16 @@ python run_frontend.py
 ```
 
 The frontend will be available at http://localhost:8501
+
+### Running the Flask Frontend
+
+Start the Flask application:
+
+```bash
+python run_flask_frontend.py
+```
+
+The Flask frontend will be available at http://localhost:8502
 
 ### Using the Application
 
@@ -212,6 +228,10 @@ The frontend will be available at http://localhost:8501
 │   ├── frontend/         # Streamlit frontend
 │   │   ├── app.py       # Streamlit application
 │   │   └── auth.py      # Authentication utilities for frontend
+│   ├── flask_frontend/   # Flask frontend (alternative UI)
+│   │   ├── app.py       # Flask application
+│   │   ├── templates/   # HTML templates
+│   │   └── static/      # CSS, JS, and other static files
 │   ├── nodes/            # Agent nodes
 │   │   ├── arguments_selector.py  # Match profile to job needs
 │   │   ├── pain_points_extractor.py  # Extract client pain points
@@ -222,7 +242,8 @@ The frontend will be available at http://localhost:8501
 ├── .env.example          # Example environment variables
 ├── requirements.txt      # Project dependencies
 ├── run_api.py            # Script to run the API
-└── run_frontend.py       # Script to run the frontend
+├── run_frontend.py       # Script to run the Streamlit frontend
+└── run_flask_frontend.py # Script to run the Flask frontend
 ```
 
 ## How It Works
@@ -242,7 +263,9 @@ The frontend will be available at http://localhost:8501
 - **LangGraph**: For creating the multi-step agent workflow
 - **Groq LLM**: For natural language processing and text generation
 - **FastAPI**: For creating the RESTful API
-- **Streamlit**: For building the user interface
+- **Streamlit**: For building the primary user interface
+- **Flask**: For the alternative web interface
+- **Bootstrap**: For responsive UI design in the Flask frontend
 - **Pydantic**: For data validation and settings management
 - **SQLAlchemy**: For ORM and database operations
 - **PostgreSQL**: For persistent data storage
@@ -267,4 +290,6 @@ MIT
 - [LangGraph](https://github.com/langchain-ai/langgraph) for the agent framework
 - [Groq](https://groq.com/) for the LLM API
 - [FastAPI](https://fastapi.tiangolo.com/) for the API framework
-- [Streamlit](https://streamlit.io/) for the frontend framework
+- [Streamlit](https://streamlit.io/) for the primary frontend framework
+- [Flask](https://flask.palletsprojects.com/) for the alternative frontend framework
+- [Bootstrap](https://getbootstrap.com/) for the Flask frontend UI components
