@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Upwork Proposal Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Your Profile</h1>
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('profile') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ profile.name }}" placeholder="Your full name">
+                        <div class="form-text">Your full name as it appears on your Upwork profile.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Skills (one per line)</label>
+                        <textarea class="form-control" id="skills" name="skills" rows="5" placeholder="Enter your skills, one per line">{{ profile.skills|join('\n') }}</textarea>
+                        <div class="form-text">List your professional skills, one per line.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="experience" class="form-label">Years of Experience</label>
+                            <input type="number" class="form-control" id="experience" name="experience" min="0" max="50" value="{{ profile.experience }}">
+                            <div class="form-text">Your years of professional experience.</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">Hourly Rate (USD)</label>
+                            <input type="number" class="form-control" id="price" name="price" min="0" max="500" value="{{ profile.price }}">
+                            <div class="form-text">Your hourly rate in USD.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Profile Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="8">{{ profile.description }}</textarea>
+                        <div class="form-text">Your Upwork profile description or summary.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
