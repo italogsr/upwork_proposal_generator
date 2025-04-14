@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Generated Proposal - Upwork Proposal Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Generated Proposal</h1>
+        
+        {% if not session.get('is_authenticated') %}
+            <div class="alert alert-warning">
+                Please <a href="{{ url_for('login') }}" class="alert-link">log in</a> to generate proposals.
+            </div>
+        {% elif not has_profile or not has_job %}
+            <div class="alert alert-warning">
+                Please fill out your profile and job description first.
+                {% if not has_profile %}
+                    <a href="{{ url_for('profile') }}" class="alert-link">Go to Profile</a>
+                {% endif %}
+                {% if not has_job %}
+                    {% if not has_profile %} and {% endif %}
+                    <a href="{{ url_for('job') }}" class="alert-link">Go to Job Description</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <form method="POST" action="{{ url_for('proposal') }}">
+                <button type="submit" class="btn btn-primary mb-4">Generate Proposal</button>
+            </form>
+            
+            {% if proposal %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2>Generated Proposal</h2>
+                        <h3>Headline</h3>
+                        <p style="white-space: pre-line">{{ proposal.headline }}</p>
+                        
+                        <h3>Body</h3>
+                        <p style="white-space: pre-line">{{ proposal.body }}</p>
+                        
+                        <h3>Full Text</h3>
+                        <p style="white-space: pre-line">{{ proposal.full_text }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyToClipboard() {
+        const textarea = document.getElementById('full_text');
+        textarea.select();
+        document.execCommand('copy');
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            Copied to clipboard!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const cardBody = textarea.closest('.card-body');
+        cardBody.appendChild(alertDiv);
+        
+        // Remove the alert after 3 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+</script>
+{% endblock %}
