@@ -1,42 +1,72 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import requests
 import os
 from dotenv import load_dotenv
-from typing import Dict, Optional
-from markupsafe import Markup
+import requests
+from typing import Dict
+from markupsafe import Markup  # Changed from jinja2 import Markup
 
-# Load environment variables
 load_dotenv()
+
+app = Flask(__name__)
+# Set a strong secret key for session management
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
+# Set session type to filesystem
+app.config['SESSION_TYPE'] = 'filesystem'
+
+# Add nl2br filter
+@app.template_filter('nl2br')
+def nl2br_filter(text):
+    if not text:
+        return ""
+    return Markup(text.replace('\n', '<br>'))
 
 # Define API URL
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-# Create Flask app
-app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key")
-
-# Custom Jinja2 filter for converting newlines to <br> tags
-@app.template_filter('nl2br')
-def nl2br(value):
-    if value:
-        return Markup(value.replace('\n', '<br>'))
-    return value
-
 def generate_proposal(profile_data: Dict, job_data: Dict) -> Dict:
     """Generate a proposal using the API"""
     try:
+        # Debug prints
+        print("Session contents:", dict(session))
+        print("Access token exists:", 'access_token' in session)
+        
+        # Check if user is authenticated
+        if not session.get('access_token'):
+            flash("Please log in to generate proposals.", "error")
+            return None
+
+        # Debug print
+        print(f"Using token: {session['access_token'][:20]}...")
+        
+        headers = {
+            "Authorization": f"Bearer {session['access_token']}",
+            "Content-Type": "application/json"
+        }
+        
+        # Debug print
+        print("Request headers:", headers)
+        print("Request data:", {"profile": profile_data, "job": job_data})
+
         response = requests.post(
             f"{API_URL}/generate-proposal",
             json={
                 "profile": profile_data,
                 "job": job_data
             },
-            headers={"Authorization": f"Bearer {session.get('access_token')}"} if session.get('access_token') else {},
+            headers=headers,
             timeout=180  # Increase timeout to 3 minutes
         )
 
+        # Debug print
+        print("Response status:", response.status_code)
+        print("Response body:", response.text)
+
         if response.status_code == 200:
             return response.json()
+        elif response.status_code == 401:
+            flash("Your session has expired. Please log in again.", "error")
+            session.clear()  # Clear the invalid session
+            return None
         elif response.status_code == 504:
             flash("Request timed out. The server took too long to respond.", "error")
         else:
@@ -116,6 +146,11 @@ def job():
 
 @app.route('/proposal', methods=['GET', 'POST'])
 def proposal():
+    # Check if user is authenticated
+    if not session.get('is_authenticated'):
+        flash("Please log in to generate proposals.", "warning")
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
         # Check if profile and job are in session
         if 'profile' not in session or 'job' not in session:
@@ -156,6 +191,8 @@ def login():
                 token_data = response.json()
                 session['access_token'] = token_data['access_token']
                 session['is_authenticated'] = True
+                # Add debug print
+                print(f"Token stored in session: {session['access_token'][:20]}...")
                 flash("Login successful!", "success")
                 return redirect(url_for('index'))
             else:
