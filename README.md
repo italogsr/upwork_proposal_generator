@@ -2,6 +2,26 @@
 
 A LangGraph-powered tool that automatically generates personalized Upwork proposals based on your profile and job descriptions. This tool helps freelancers create compelling, tailored proposals that address client pain points and highlight relevant skills and experience.
 
+## Quick Start
+
+The fastest way to get started is using Docker:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/upwork_proposal_generator.git
+cd upwork_proposal_generator
+
+# Run the Docker setup script
+./docker-run.sh
+```
+
+Then access the application at:
+- Streamlit Frontend: http://localhost:8501
+- Flask Frontend: http://localhost:8502
+- API Documentation: http://localhost:8000/docs
+
+For detailed setup instructions, see the [Installation](#installation) section below.
+
 ## Features
 
 - **LangGraph Agent**: Intelligent proposal generation using a multi-step agent workflow
@@ -34,13 +54,52 @@ A LangGraph-powered tool that automatically generates personalized Upwork propos
 
 ## Installation
 
-### Prerequisites
+You can run the Upwork Proposal Generator either locally or using Docker containers.
+
+### Option 1: Docker Setup (Recommended)
+
+The easiest way to get started is using Docker, which handles all dependencies and configuration automatically.
+
+#### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Groq API key](https://console.groq.com/) for LLM access
+
+#### Quick Start
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/upwork_proposal_generator.git
+   cd upwork_proposal_generator
+   ```
+
+2. Run the helper script:
+   ```bash
+   ./docker-run.sh
+   ```
+
+   This script will:
+   - Create a `.env` file from the template if it doesn't exist
+   - Check if your Groq API key is set
+   - Build and start the containers
+
+3. Access the application:
+   - API Documentation: http://localhost:8000/docs
+   - Streamlit Frontend: http://localhost:8501
+   - Flask Frontend: http://localhost:8502
+
+For more detailed Docker instructions, see [DOCKER_README.md](DOCKER_README.md).
+
+### Option 2: Local Setup
+
+#### Prerequisites
 
 - Python 3.9 or higher
 - [Groq API key](https://console.groq.com/) for LLM access
 - PostgreSQL database (local or remote)
 
-### Setup
+#### Setup
 
 1. Clone the repository:
    ```bash
@@ -67,25 +126,45 @@ A LangGraph-powered tool that automatically generates personalized Upwork propos
 5. Add your Groq API key and database configuration to the `.env` file:
    ```
    GROQ_API_KEY=your_groq_api_key_here
-   DATABASE_URL=your_postgresql_database_url_here
-   SECRET_KEY=your_secret_key_for_jwt_tokens
-   ```
-
-   You can also configure other settings in the `.env` file:
-   ```
-   API_URL=http://localhost:8000  # URL for the frontend to connect to
-   API_PORT=8000                  # Port for the API server
-   STREAMLIT_PORT=8501            # Port for the Streamlit frontend
-   FLASK_PORT=8502                # Port for the Flask frontend
+   DATABASE_USER=your_database_user
+   DATABASE_PASSWORD=your_database_password
+   DATABASE_HOST=localhost
+   DATABASE_PORT=5432
+   JWT_SECRET_KEY=your_secret_key_for_jwt_tokens
+   FLASK_SECRET_KEY=your_secret_key_for_flask
    ```
 
 6. Set up the database:
    ```bash
-   # Create the database (if not already created)
-   createdb upwork_proposal_generator
+   # Install PostgreSQL (Ubuntu/Debian)
+   sudo apt-get update
+   sudo apt-get install postgresql postgresql-contrib
 
-   # Run the database migrations
-   python -m src.db.migrations.create_tables
+   # Start PostgreSQL service if not already running
+   sudo systemctl start postgresql
+
+   # Create the database and user (run as postgres user)
+   sudo -u postgres psql -c "CREATE DATABASE upwork_proposal_generator;"
+   sudo -u postgres psql -c "CREATE USER your_database_user WITH PASSWORD 'your_database_password';"
+   sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE upwork_proposal_generator TO your_database_user;"
+   sudo -u postgres psql -d upwork_proposal_generator -c "GRANT ALL ON SCHEMA public TO your_database_user;"
+
+   # Create the database tables
+   python db_schema.py
+   ```
+
+   Note: If you're using a different operating system, please refer to the [PostgreSQL documentation](https://www.postgresql.org/download/) for installation instructions.
+
+7. Test the database connection:
+   ```bash
+   # Run the test connection script
+   python test_db_connection.py
+   ```
+
+   You should see output similar to:
+   ```
+   Successfully connected to the database!
+   PostgreSQL version: PostgreSQL 16.8 (Ubuntu 16.8-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
    ```
 
 ## Usage
@@ -239,11 +318,117 @@ The Flask frontend will be available at http://localhost:8502
 │   │   └── skill_extractor.py  # Extract required skills
 │   └── states/           # State definitions
 │       └── states.py     # Pydantic models for state
-├── .env.example          # Example environment variables
+├── docker/               # Docker configuration
+│   ├── backend/          # Backend container configuration
+│   │   ├── Dockerfile    # Backend container definition
+│   │   └── start.sh      # Backend startup script
+│   ├── streamlit/        # Streamlit container configuration
+│   │   ├── Dockerfile    # Streamlit container definition
+│   │   └── start.sh      # Streamlit startup script
+│   ├── flask/            # Flask container configuration
+│   │   ├── Dockerfile    # Flask container definition
+│   │   └── start.sh      # Flask startup script
+│   ├── db/               # Database container configuration
+│   │   └── init.sql      # Database initialization script
+│   └── requirements.txt  # Docker container dependencies
+├── database_config.py    # Database connection configuration
+├── db_schema.py          # Database schema creation script
+├── create_tables.py      # Database tables creation script
+├── test_db_connection.py # Script to test database connectivity
+├── .env.example          # Example environment variables for local setup
+├── .env.docker           # Example environment variables for Docker setup
+├── docker-compose.yml    # Docker Compose configuration
+├── docker-run.sh         # Helper script for Docker setup
+├── DOCKER_README.md      # Docker setup instructions
 ├── requirements.txt      # Project dependencies
 ├── run_api.py            # Script to run the API
 ├── run_frontend.py       # Script to run the Streamlit frontend
 └── run_flask_frontend.py # Script to run the Flask frontend
+```
+
+## Database Configuration
+
+The application uses a PostgreSQL database for storing user profiles, job descriptions, and generated proposals. For detailed information about the database setup and schema, see [DATABASE_README.md](DATABASE_README.md).
+
+Basic database configuration is defined in `database_config.py`:
+
+```python
+# Database connection parameters
+DB_CONFIG = {
+    'dbname': 'upwork_proposal_generator',
+    'user': os.getenv('DATABASE_USER'),
+    'password': os.getenv('DATABASE_PASSWORD'),
+    'host': os.getenv('DATABASE_HOST', 'localhost'),
+    'port': os.getenv('DATABASE_PORT', '5432')
+}
+
+# Connection string format for SQLAlchemy
+DB_URI = f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
+```
+
+## Database Schema
+
+The application uses a PostgreSQL database with the following tables:
+
+### Users Table
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+```
+
+### Profiles Table
+
+```sql
+CREATE TABLE profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(255) NOT NULL,
+    skills TEXT[],
+    experience INTEGER DEFAULT 0,
+    price INTEGER DEFAULT 0,
+    description TEXT,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+```
+
+### Job Descriptions Table
+
+```sql
+CREATE TABLE job_descriptions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    post_title VARCHAR(255) NOT NULL,
+    post_description TEXT NOT NULL,
+    post_skills_founded TEXT[],
+    skills_asked_expliced TEXT[],
+    level_asked VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+```
+
+### Proposals Table
+
+```sql
+CREATE TABLE proposals (
+    id SERIAL PRIMARY KEY,
+    profile_id INTEGER REFERENCES profiles(id),
+    job_description_id INTEGER REFERENCES job_descriptions(id),
+    headline TEXT,
+    body TEXT,
+    full_text TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE
+);
 ```
 
 ## How It Works
@@ -269,6 +454,10 @@ The Flask frontend will be available at http://localhost:8502
 - **Pydantic**: For data validation and settings management
 - **SQLAlchemy**: For ORM and database operations
 - **PostgreSQL**: For persistent data storage
+  - Stores user profiles with skills, experience, and education
+  - Saves job descriptions and requirements
+  - Archives generated proposals for future reference
+- **psycopg2**: For PostgreSQL database connectivity
 - **JWT**: For secure authentication
 
 ## Contributing

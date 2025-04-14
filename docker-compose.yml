@@ -1,0 +1,76 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16
+    container_name: upwork-proposal-db
+    restart: always
+    environment:
+      POSTGRES_DB: upwork_proposal_generator
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: upwork-proposal-backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/upwork_proposal_generator
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - SECRET_KEY=${JWT_SECRET_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+
+  # Streamlit Frontend
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/streamlit/Dockerfile
+    container_name: upwork-proposal-streamlit
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      - API_URL=http://backend:8000
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src:/app/src
+
+  # Flask Frontend (Optional)
+  flask:
+    build:
+      context: .
+      dockerfile: docker/flask/Dockerfile
+    container_name: upwork-proposal-flask
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      - API_URL=http://backend:8000
+      - FLASK_PORT=8502
+      - FLASK_APP=src.flask_frontend.app
+      - FLASK_ENV=development
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+    ports:
+      - "8502:8502"
+    volumes:
+      - ./src:/app/src
+
+volumes:
+  postgres_data:
