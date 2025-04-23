@@ -4,8 +4,6 @@ import logging
 
 def generate_proposal(llm, arguments, job_description, job_post_title):
     class ProposalOutput(BaseModel):
-        headline: str = Field(..., description="First line of the proposal that grabs attention")
-        body: str = Field(..., description="Main content of the proposal")
         full_text: str = Field(..., description="Complete proposal text")
 
     proposal_prompt = f"""
@@ -35,13 +33,6 @@ def generate_proposal(llm, arguments, job_description, job_post_title):
         1. A compelling headline
         2. A well-structured body
         3. The full text (headline + body)
-
-        Return in this format:
-        {
-            "headline": "Your attention-grabbing headline",
-            "body": "The main content of your proposal",
-            "full_text": "The complete proposal text"
-        }
         """)
     ]
 
@@ -50,9 +41,4 @@ def generate_proposal(llm, arguments, job_description, job_post_title):
         return proposal_structured_llm.invoke(proposal_generation_prompt)
     except Exception as e:
         logging.error(f"Error in structured output: {str(e)}")
-        # Return a default structured response with a more helpful message
-        return ProposalOutput(
-            headline="I Can Deliver Exceptional Results for Your Project",
-            body="As an experienced professional, I understand your needs and can deliver high-quality work that meets your requirements. My approach combines technical expertise with attention to detail, ensuring that your project is completed to the highest standards. I'm ready to start immediately and would love to discuss how I can help you achieve your goals.",
-            full_text="I Can Deliver Exceptional Results for Your Project\n\nAs an experienced professional, I understand your needs and can deliver high-quality work that meets your requirements. My approach combines technical expertise with attention to detail, ensuring that your project is completed to the highest standards. I'm ready to start immediately and would love to discuss how I can help you achieve your goals."
-        )
+        return None

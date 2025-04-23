@@ -1,4 +1,4 @@
-from typing import Dict, List, Annotated, TypedDict, Literal
+from typing import Dict, List, Annotated, TypedDict, Literal, Optional
 from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
@@ -92,7 +92,7 @@ def initialize_llm(api_key, model="qwen-2.5-32b"):
         max_retries=2
     )
 
-def run_proposal_agent(profile: InfoProfile, job: Jobdescription, api_key: str, model: str = "qwen-2.5-32b"):
+def run_proposal_agent(profile: InfoProfile, job: Jobdescription, api_key: str, model: str = "qwen-2.5-32b", client_id: Optional[str] = None):
     """Run the proposal agent"""
     # Initialize the LLM
     llm = initialize_llm(api_key, model)
@@ -112,5 +112,7 @@ def run_proposal_agent(profile: InfoProfile, job: Jobdescription, api_key: str, 
     
     # Run the agent
     result = agent.invoke(initial_state)
+    if client_id:
+        logging.info(f"Proposal generated for client ID: {client_id}")
     
     return result["proposal"]
