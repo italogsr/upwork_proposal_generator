@@ -17,6 +17,8 @@ debugpy==1.8.14
 decorator==5.2.1
 distro==1.9.0
 dnspython==2.7.0
+fastapi
+uvicorn
 ecdsa==0.19.1
 email_validator==2.2.0
 executing==2.2.0
@@ -81,7 +83,7 @@ pydeck==0.9.1
 Pygments==2.19.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
-python-jose==3.4.0
+python-jose[cryptography]==3.4.0
 python-multipart==0.0.20
 pytz==2025.2
 PyYAML==6.0.2

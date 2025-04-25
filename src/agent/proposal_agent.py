@@ -8,6 +8,10 @@ from src.nodes.pain_points_extractor import get_pain_points
 from src.nodes.arguments_selector import selecting_arguments
 from src.nodes.proposal_generator import generate_proposal
 from src.states.states import InfoProfile, Jobdescription, ProposalState
+import logging
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # Define the state for the graph
 class AgentState(TypedDict):
@@ -49,10 +53,7 @@ def generate_proposal_text(state: AgentState, llm) -> AgentState:
         state["job"].post_description,
         state["job"].post_title
     )
-    
     proposal_state = ProposalState(
-        headline=proposal_result.headline,
-        body=proposal_result.body,
         full_text=proposal_result.full_text
     )
     
@@ -81,7 +82,7 @@ def create_proposal_agent(llm):
     # Compile the graph
     return workflow.compile()
 
-def initialize_llm(api_key, model="qwen-2.5-32b"):
+def initialize_llm(api_key, model=os.environ["GROQ_MODEL"]):
     """Initialize the LLM"""
     return ChatGroq(
         api_key=api_key,
@@ -92,10 +93,10 @@ def initialize_llm(api_key, model="qwen-2.5-32b"):
         max_retries=2
     )
 
-def run_proposal_agent(profile: InfoProfile, job: Jobdescription, api_key: str, model: str = "qwen-2.5-32b", client_id: Optional[str] = None):
+def run_proposal_agent(profile: InfoProfile, job: Jobdescription, client_id: Optional[str] = None, model=os.environ["GROQ_MODEL"]):
     """Run the proposal agent"""
     # Initialize the LLM
-    llm = initialize_llm(api_key, model)
+    llm = initialize_llm(os.environ["GROQ_API_KEY"], model)
     
     # Create the agent
     agent = create_proposal_agent(llm)
